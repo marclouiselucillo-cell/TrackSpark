@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TrackSpark</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    :root {
+      --bg:       #07090d;
+      --panel:    #0d1117;
+      --card:     #111820;
+      --border:   #1c2535;
+      --accent:   #f97316;
+      --accentlo: rgba(249,115,22,0.12);
+      --blue:     #38bdf8;
+      --bluelo:   rgba(56,189,248,0.1);
+      --green:    #22c55e;
+      --red:      #ef4444;
+      --text:     #cbd5e1;
+      --muted:    #475569;
+      --white:    #f1f5f9;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-weight: 300;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── HEADER ── */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px;
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--panel);
+      position: sticky;
+      top: 0;
+      z-index: 900;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      width: 32px; height: 32px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      box-shadow: 0 0 16px rgba(249,115,22,0.4);
+      animation: iconPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes iconPulse {
+      0%, 100% { box-shadow: 0 0 16px rgba(249,115,22,0.4); }
+      50%       { box-shadow: 0 0 28px rgba(249,115,22,0.7); }
+    }
+
+    .logo-text {
+      font-family: 'Orbitron', monospace;
+      font-weight: 900;
+      font-size: 1.1rem;
+      color: var(--white);
+      letter-spacing: 0.05em;
+    }
+
+    .logo-text span { color: var(--accent); }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .conn-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      transition: all 0.3s;
+    }
+
+    .conn-pill.online  { border-color: var(--green); color: var(--green); }
+    .conn-pill.offline { border-color: var(--red);   color: var(--red);   }
+
+    .conn-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: blink 1.4s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+
+    /* ── LAYOUT ── */
+    .main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 320px 1fr;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      border-right: 1px solid var(--border);
+      padding: 20px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      background: var(--panel);
+      overflow-y: auto;
+    }
+
+    .section-label {
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    /* DEVICE CARD */
+    .device-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .device-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      animation: scanline 2.5s linear infinite;
+    }
+
+    @keyframes scanline {
+      to { left: 100%; }
+    }
+
+    .device-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .device-name {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--white);
+    }
+
+    .device-badge {
+      font-size: 0.6rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: var(--accentlo);
+      color: var(--accent);
+      border: 1px solid rgba(249,115,22,0.3);
+      letter-spacing: 0.1em;
+    }
+
+    .device-id {
+      font-size: 0.68rem;
+      color: var(--muted);
+      font-family: monospace;
+      margin-bottom: 12px;
+    }
+
+    .signal-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+    }
+
+    .signal-bar {
+      width: 5px;
+      border-radius: 2px;
+      transition: background 0.3s;
+    }
+
+    .signal-bar.active { background: var(--accent); }
+    .signal-bar:not(.active) { background: var(--border); }
+
+    .signal-label {
+      font-family: monospace;
+      font-size: 0.72rem;
+      color: var(--accent);
+      margin-left: 8px;
+      align-self: center;
+    }
+
+    /* COORDS CARD */
+    .coords-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .coord-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .coord-row:last-child { border-bottom: none; }
+
+    .coord-key {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+    }
+
+    .coord-val {
+      font-family: monospace;
+      font-size: 0.8rem;
+      color: var(--blue);
+      transition: color 0.3s;
+    }
+
+    .coord-val.flash { color: var(--white); }
+
+    /* BUZZ CARD */
+    .buzz-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    .buzz-btn {
+      width: 100%;
+      padding: 14px;
+      background: transparent;
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      color: var(--accent);
+      font-family: 'Orbitron', monospace;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .buzz-btn:hover {
+      background: var(--accentlo);
+      box-shadow: 0 0 20px rgba(249,115,22,0.2);
+    }
+
+    .buzz-btn:active { transform: scale(0.98); }
+
+    .buzz-btn.buzzing {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 0 30px rgba(249,115,22,0.5);
+      animation: buzzShake 0.4s ease;
+    }
+
+    @keyframes buzzShake {
+      0%, 100% { transform: translateX(0); }
+      25%  { transform: translateX(-3px); }
+      75%  { transform: translateX(3px); }
+    }
+
+    .buzz-icon { font-size: 1rem; }
+
+    .buzz-status {
+      font-size: 0.68rem;
+      font-weight: 500;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 8px;
+      min-height: 16px;
+      letter-spacing: 0.05em;
+    }
+
+    /* REFRESH */
+    .refresh-wrap {
+      margin-top: auto;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+    }
+
+    .refresh-bar-track {
+      height: 2px;
+      background: var(--border);
+      border-radius: 1px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .refresh-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--blue));
+      border-radius: 1px;
+      transform-origin: left;
+      animation: countdown 10s linear infinite;
+    }
+
+    @keyframes countdown {
+      from { transform: scaleX(1); }
+      to   { transform: scaleX(0); }
+    }
+
+    .last-update {
+      font-size: 0.68rem;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .last-update span { color: var(--text); }
+
+    /* ── MAP ── */
+    .map-wrap {
+      position: relative;
+      background: #050709;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      min-height: 600px;
+    }
+
+    .leaflet-tile { filter: brightness(0.45) saturate(0.5) hue-rotate(185deg); }
+
+    /* MAP OVERLAY */
+    .map-overlay {
+      position: absolute;
+      top: 14px; right: 14px;
+      background: rgba(13,17,23,0.9);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      backdrop-filter: blur(8px);
+      z-index: 500;
+      min-width: 160px;
+    }
+
+    .overlay-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 4px 0;
+      font-size: 0.68rem;
+    }
+
+    .overlay-key { color: var(--muted); font-weight: 500; letter-spacing: 0.08em; }
+    .overlay-val { color: var(--blue);  font-family: monospace; font-size: 0.72rem; }
+
+    /* MAP TITLE BADGE */
+    .map-title {
+      position: absolute;
+      top: 14px; left: 14px;
+      background: rgba(13,17,23,0.9);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      backdrop-filter: blur(8px);
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .map-title-text {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: 0.1em;
+    }
+
+    .map-ping {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px rgba(249,115,22,0.8);
+      animation: blink 1.4s ease-in-out infinite;
+    }
+
+    /* CUSTOM MARKER */
+    .ts-marker {
+      width: 18px; height: 18px;
+      background: var(--accent);
+      border: 2px solid #fff;
+      border-radius: 50%;
+      box-shadow: 0 0 14px rgba(249,115,22,0.9);
+      animation: markerGlow 2s ease-in-out infinite;
+    }
+
+    @keyframes markerGlow {
+      0%, 100% { box-shadow: 0 0 14px rgba(249,115,22,0.9); }
+      50%       { box-shadow: 0 0 28px rgba(249,115,22,1), 0 0 50px rgba(249,115,22,0.4); }
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 10px 28px;
+      font-size: 0.65rem;
+      color: var(--muted);
+      background: var(--panel);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-brand {
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      font-size: 0.6rem;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .main { grid-template-columns: 1fr; }
+      #map  { min-height: 380px; }
+      .sidebar { border-right: none; border-bottom: 1px solid var(--border); }
+      .map-title { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">⚡</div>
+    <div class="logo-text">Track<span>Spark</span></div>
+  </div>
+  <div class="header-right">
+    <div class="conn-pill online" id="conn-pill">
+      <div class="conn-dot"></div>
+      <span id="conn-label">CONNECTED</span>
+    </div>
+    <span id="user-label" style="font-size:0.7rem;color:var(--muted);font-weight:500;"></span>
+    <button onclick="logout()" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-family:'Inter',sans-serif;font-size:0.7rem;padding:5px 12px;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.color='#ef4444';this.style.borderColor='#ef4444'" onmouseout="this.style.color='';this.style.borderColor=''">Logout</button>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <!-- DEVICE -->
+    <div>
+      <div class="section-label">Tracker Device</div>
+      <div class="device-card">
+        <div class="device-header">
+          <div class="device-name">SPARK-01</div>
+          <div class="device-badge">BLE · GPS</div>
+        </div>
+        <div class="device-id">ESP32 · A4:CF:12:7E:3B:91</div>
+        <div class="signal-row" id="signal-bars">
+          <div class="signal-bar active" style="height:8px"></div>
+          <div class="signal-bar active" style="height:13px"></div>
+          <div class="signal-bar active" style="height:18px"></div>
+          <div class="signal-bar"        style="height:23px"></div>
+          <div class="signal-bar"        style="height:28px"></div>
+          <div class="signal-label" id="rssi-val">-62 dBm</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COORDINATES -->
+    <div>
+      <div class="section-label">GPS Coordinates</div>
+      <div class="coords-card">
+        <div class="coord-row">
+          <span class="coord-key">LATITUDE</span>
+          <span class="coord-val" id="lat-val">14.599512</span>
+        </div>
+        <div class="coord-row">
+          <span class="coord-key">LONGITUDE</span>
+          <span class="coord-val" id="lng-val">120.984222</span>
+        </div>
+        <div class="coord-row">
+          <span class="coord-key">ALTITUDE</span>
+          <span class="coord-val" id="alt-val">21.4 m</span>
+        </div>
+        <div class="coord-row">
+          <span class="coord-key">ACCURACY</span>
+          <span class="coord-val" id="acc-val">±3.2 m</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- BUZZER -->
+    <div>
+      <div class="section-label">Remote Alert</div>
+      <div class="buzz-card">
+        <button class="buzz-btn" id="buzz-btn" onclick="triggerBuzz()">
+          <span class="buzz-icon">🔔</span>
+          TRIGGER BUZZ
+        </button>
+        <div class="buzz-status" id="buzz-status">READY</div>
+      </div>
+    </div>
+
+    <!-- REFRESH -->
+    <div class="refresh-wrap">
+      <div class="refresh-bar-track">
+        <div class="refresh-bar-fill" id="refresh-bar"></div>
+      </div>
+      <div class="last-update">
+        <span>LAST UPDATE</span>
+        <span id="last-time">just now</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MAP -->
+  <div class="map-wrap">
+    <div id="map"></div>
+
+    <div class="map-title">
+      <div class="map-ping"></div>
+      <div class="map-title-text">LIVE TRACKING</div>
+    </div>
+
+    <div class="map-overlay">
+      <div class="overlay-row">
+        <span class="overlay-key">RANGE</span>
+        <span class="overlay-val">30 m BLE</span>
+      </div>
+      <div class="overlay-row">
+        <span class="overlay-key">STATUS</span>
+        <span class="overlay-val" id="range-status">IN RANGE</span>
+      </div>
+      <div class="overlay-row">
+        <span class="overlay-key">GPS</span>
+        <span class="overlay-val" id="gps-source">WAITING...</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <span class="footer-brand">⚡ TRACKSPARK</span>
+  <span>ESP32 · BLE + GPS · Real-Time Tracking</span>
+  <span id="footer-time"></span>
+</footer>
+
+<script>
+  // ── AUTH ─────────────────────────────────────────────────
+  const tsUser = sessionStorage.getItem('ts_user');
+  if (!tsUser) window.location.href = 'login.html';
+  const currentUser = tsUser ? JSON.parse(tsUser) : {};
+  window.addEventListener('DOMContentLoaded', () => {
+    const el = document.getElementById('user-label');
+    if (el && currentUser.username) el.textContent = currentUser.username.toUpperCase();
+  });
+  function logout() {
+    sessionStorage.removeItem('ts_user');
+    window.location.href = 'login.html';
+  }
+
+  // ── CONFIG ───────────────────────────────────────────────
+  const ESP32_IP   = '10.169.166.42';   // ← your ESP32 IP from Serial Monitor
+  const BUZZ_URL   = `http://${ESP32_IP}/buzz`;
+  const GPS_URL    = `http://${ESP32_IP}/location`;
+  const REFRESH_MS = 10000;
+
+  // ── DEMO FALLBACK ────────────────────────────────────────
+  const demoBase = { lat: 14.5995, lng: 120.9842, alt: 21.4, acc: 3.2, rssi: -62 };
+  let usingDemo  = false;
+
+  // ── MAP ──────────────────────────────────────────────────
+  const map = L.map('map', { zoomControl: true }).setView([demoBase.lat, demoBase.lng], 17);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
+
+  const markerIcon = L.divIcon({ className: 'ts-marker', iconSize: [18, 18] });
+  const marker = L.marker([demoBase.lat, demoBase.lng], { icon: markerIcon }).addTo(map);
+
+  const rangeCircle = L.circle([demoBase.lat, demoBase.lng], {
+    radius: 30,
+    color: '#f97316',
+    fillColor: '#f97316',
+    fillOpacity: 0.05,
+    weight: 1,
+    dashArray: '5 5'
+  }).addTo(map);
+
+  // ── FETCH LOCATION ───────────────────────────────────────
+  async function fetchLocation() {
+    try {
+      const res  = await fetch(GPS_URL);
+      const data = await res.json();
+      if (data.error) { showDemo(); return; }
+      usingDemo = false;
+      updateUI(data);
+      setConnected(true);
+      setGPSSource('LIVE GPS', '#22c55e');
+    } catch {
+      showDemo();
+      setConnected(false);
+    }
+  }
+
+  function showDemo() {
+    usingDemo = true;
+    updateUI({
+      lat:  demoBase.lat  + (Math.random() - 0.5) * 0.0002,
+      lng:  demoBase.lng  + (Math.random() - 0.5) * 0.0002,
+      alt:  +(demoBase.alt  + (Math.random() - 0.5) * 0.5).toFixed(1),
+      acc:  +(demoBase.acc  + (Math.random() - 0.5) * 0.4).toFixed(1),
+      rssi: Math.round(demoBase.rssi + (Math.random() - 0.5) * 10)
+    });
+    setGPSSource('SIMULATED', '#ef4444');
+  }
+
+  function updateUI(data) {
+    flash('lat-val', data.lat.toFixed(6));
+    flash('lng-val', data.lng.toFixed(6));
+    flash('alt-val', data.alt + ' m');
+    flash('acc-val', '±' + data.acc + ' m');
+
+    marker.setLatLng([data.lat, data.lng]);
+    rangeCircle.setLatLng([data.lat, data.lng]);
+    if (!usingDemo) map.panTo([data.lat, data.lng]);
+
+    updateSignal(data.rssi);
+    document.getElementById('last-time').textContent = new Date().toLocaleTimeString();
+
+    const inRange = data.rssi > -70;
+    const rs = document.getElementById('range-status');
+    rs.textContent   = inRange ? 'IN RANGE' : 'WEAK SIGNAL';
+    rs.style.color   = inRange ? '#38bdf8'  : '#ef4444';
+
+    restartBar();
+  }
+
+  function flash(id, val) {
+    const el = document.getElementById(id);
+    el.textContent = val;
+    el.classList.add('flash');
+    setTimeout(() => el.classList.remove('flash'), 500);
+  }
+
+  function updateSignal(rssi) {
+    document.getElementById('rssi-val').textContent = rssi + ' dBm';
+    const strength = rssi > -50 ? 5 : rssi > -60 ? 4 : rssi > -70 ? 3 : rssi > -80 ? 2 : 1;
+    document.querySelectorAll('#signal-bars .signal-bar').forEach((b, i) => {
+      b.classList.toggle('active', i < strength);
+    });
+  }
+
+  function setConnected(ok) {
+    const pill = document.getElementById('conn-pill');
+    pill.className = 'conn-pill ' + (ok ? 'online' : 'offline');
+    document.getElementById('conn-label').textContent = ok ? 'CONNECTED' : 'DISCONNECTED';
+  }
+
+  function setGPSSource(text, color) {
+    const el = document.getElementById('gps-source');
+    el.textContent  = text;
+    el.style.color  = color;
+  }
+
+  // ── BUZZ ─────────────────────────────────────────────────
+  async function triggerBuzz() {
+    const btn    = document.getElementById('buzz-btn');
+    const status = document.getElementById('buzz-status');
+    if (btn.classList.contains('buzzing')) return;
+
+    btn.classList.add('buzzing');
+    btn.innerHTML    = '<span class="buzz-icon">🔔</span> BUZZING...';
+    status.textContent = 'SIGNAL SENT';
+    status.style.color = '#f97316';
+
+    try {
+      await fetch(BUZZ_URL, { method: 'POST' });
+      status.textContent = 'COMMAND DELIVERED ✓';
+      status.style.color = '#22c55e';
+    } catch {
+      status.textContent = 'DELIVERY FAILED';
+      status.style.color = '#ef4444';
+    }
+
+    setTimeout(() => {
+      btn.classList.remove('buzzing');
+      btn.innerHTML      = '<span class="buzz-icon">🔔</span> TRIGGER BUZZ';
+      status.textContent = 'READY';
+      status.style.color = '';
+    }, 2500);
+  }
+
+  // ── REFRESH BAR ──────────────────────────────────────────
+  function restartBar() {
+    const bar = document.getElementById('refresh-bar');
+    bar.style.animation = 'none';
+    void bar.offsetWidth;
+    bar.style.animation = `countdown ${REFRESH_MS / 1000}s linear forwards`;
+  }
+
+  // ── CLOCK ────────────────────────────────────────────────
+  setInterval(() => {
+    document.getElementById('footer-time').textContent = new Date().toLocaleTimeString();
+  }, 1000);
+
+  // ── START ────────────────────────────────────────────────
+  fetchLocation();
+  setInterval(fetchLocation, REFRESH_MS);
+</script>
+</body>
+</html>

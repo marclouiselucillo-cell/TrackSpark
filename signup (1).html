@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TrackSpark — Sign Up</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:      #07090d;
+      --panel:   #0d1117;
+      --card:    #111820;
+      --border:  #1c2535;
+      --accent:  #f97316;
+      --green:   #22c55e;
+      --red:     #ef4444;
+      --text:    #cbd5e1;
+      --muted:   #475569;
+      --white:   #f1f5f9;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(249,115,22,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(249,115,22,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 40px 36px;
+      width: 100%;
+      max-width: 400px;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .logo-icon {
+      width: 40px; height: 40px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 0 20px rgba(249,115,22,0.4);
+    }
+    .logo-text {
+      font-family: 'Orbitron', monospace;
+      font-weight: 900;
+      font-size: 1.3rem;
+      color: var(--white);
+    }
+    .logo-text span { color: var(--accent); }
+    .tagline {
+      text-align: center;
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-bottom: 32px;
+      letter-spacing: 0.1em;
+    }
+    .form-group { margin-bottom: 16px; }
+    label {
+      display: block;
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 7px;
+    }
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--white);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(249,115,22,0.1);
+    }
+    input::placeholder { color: var(--muted); }
+    .field-msg {
+      font-size: 0.7rem;
+      margin-top: 5px;
+      min-height: 16px;
+      display: none;
+    }
+    .field-msg.error { color: var(--red);   display: block; }
+    .field-msg.ok    { color: var(--green); display: block; }
+    .submit-btn {
+      width: 100%;
+      padding: 13px;
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-family: 'Orbitron', monospace;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: all 0.2s;
+      box-shadow: 0 4px 14px rgba(249,115,22,0.3);
+    }
+    .submit-btn:hover {
+      background: #ea6c0a;
+      box-shadow: 0 4px 20px rgba(249,115,22,0.5);
+      transform: translateY(-1px);
+    }
+    .submit-btn:active { transform: scale(0.98); }
+    .divider {
+      text-align: center;
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin: 20px 0;
+      position: relative;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 40%;
+      height: 1px;
+      background: var(--border);
+    }
+    .divider::before { left: 0; }
+    .divider::after  { right: 0; }
+    .switch-link {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .switch-link a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .switch-link a:hover { text-decoration: underline; }
+    .footer-note {
+      margin-top: 28px;
+      font-size: 0.65rem;
+      color: var(--muted);
+      text-align: center;
+      letter-spacing: 0.05em;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="logo">
+    <div class="logo-icon">⚡</div>
+    <div class="logo-text">Track<span>Spark</span></div>
+  </div>
+  <div class="tagline">CREATE YOUR ACCOUNT</div>
+
+  <div class="form-group">
+    <label>Username</label>
+    <input type="text" id="username" placeholder="Choose a username" oninput="validateUsername()"/>
+    <div class="field-msg" id="username-msg"></div>
+  </div>
+
+  <div class="form-group">
+    <label>Password</label>
+    <input type="password" id="password" placeholder="Choose a password" oninput="validatePassword()"/>
+    <div class="field-msg" id="password-msg"></div>
+  </div>
+
+  <div class="form-group">
+    <label>Confirm Password</label>
+    <input type="password" id="confirm-password" placeholder="Repeat your password" oninput="validateConfirm()"/>
+    <div class="field-msg" id="confirm-msg"></div>
+  </div>
+
+  <button class="submit-btn" onclick="handleSignup()">CREATE ACCOUNT</button>
+
+  <div class="divider">or</div>
+
+  <div class="switch-link">
+    Already have an account? <a href="login.html">Log in</a>
+  </div>
+</div>
+
+<div class="footer-note">⚡ TRACKSPARK · ESP32 BLE + GPS</div>
+
+<script>
+  if (sessionStorage.getItem('ts_user')) {
+    window.location.href = 'trackspark.html';
+  }
+
+  function validateUsername() {
+    const val   = document.getElementById('username').value.trim();
+    const msg   = document.getElementById('username-msg');
+    const users = JSON.parse(localStorage.getItem('ts_users') || '[]');
+    if (val.length < 3) {
+      msg.textContent = 'Username must be at least 3 characters.';
+      msg.className   = 'field-msg error';
+    } else if (users.find(u => u.username === val)) {
+      msg.textContent = 'Username already taken.';
+      msg.className   = 'field-msg error';
+    } else {
+      msg.textContent = 'Username available ✓';
+      msg.className   = 'field-msg ok';
+    }
+  }
+
+  function validatePassword() {
+    const val = document.getElementById('password').value;
+    const msg = document.getElementById('password-msg');
+    if (val.length < 6) {
+      msg.textContent = 'Password must be at least 6 characters.';
+      msg.className   = 'field-msg error';
+    } else {
+      msg.textContent = 'Strong enough ✓';
+      msg.className   = 'field-msg ok';
+    }
+  }
+
+  function validateConfirm() {
+    const pass    = document.getElementById('password').value;
+    const confirm = document.getElementById('confirm-password').value;
+    const msg     = document.getElementById('confirm-msg');
+    if (confirm !== pass) {
+      msg.textContent = 'Passwords do not match.';
+      msg.className   = 'field-msg error';
+    } else {
+      msg.textContent = 'Passwords match ✓';
+      msg.className   = 'field-msg ok';
+    }
+  }
+
+  function handleSignup() {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    const confirm  = document.getElementById('confirm-password').value;
+
+    validateUsername();
+    validatePassword();
+    validateConfirm();
+
+    if (username.length < 3) return;
+    if (password.length < 6) return;
+    if (password !== confirm) return;
+
+    const users = JSON.parse(localStorage.getItem('ts_users') || '[]');
+    if (users.find(u => u.username === username)) return;
+
+    users.push({ username, password });
+    localStorage.setItem('ts_users', JSON.stringify(users));
+
+    sessionStorage.setItem('ts_user', JSON.stringify({ username }));
+    window.location.href = 'trackspark.html';
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleSignup();
+  });
+</script>
+</body>
+</html>
